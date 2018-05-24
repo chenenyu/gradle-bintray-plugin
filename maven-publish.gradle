@@ -1,0 +1,123 @@
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+if (!project.ext.has('GROUP') || !project.ext.has('ARTIFACT') || !project.ext.has('VERSION')) {
+    throw new MissingPropertyException("Extra properties['GROUP', 'ARTIFACT', 'VERSION'] are required.")
+}
+
+boolean isAndroidModule = false
+boolean isJavaModule = false
+if (project.plugins.hasPlugin('com.android.library')) {
+    isAndroidModule = true
+} else if (project.plugins.hasPlugin('java')) {
+    isJavaModule = true
+} else {
+    throw new UnknownPluginException('Just support android/java projects now.')
+}
+
+task sourcesJar(type: Jar) {
+    group 'build'
+    classifier = 'sources'
+}
+if (isAndroidModule) {
+    sourcesJar {
+        from android.sourceSets.main.java.srcDirs
+    }
+} else if (isJavaModule) {
+    sourcesJar {
+        from sourceSets.main.java.srcDirs
+    }
+}
+
+if (isAndroidModule) {
+    task javadoc(type: Javadoc) {
+        group 'documentation'
+        options.encoding = 'UTF-8'
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        failOnError false
+    }
+} else if (isJavaModule) {
+    javadoc {
+        options.encoding = 'UTF-8'
+        failOnError false
+    }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    group 'build'
+    from javadoc.getDestinationDir()
+    classifier = 'javadoc'
+}
+
+publishing {
+    publications {
+        Bintray(MavenPublication) {
+            groupId project.ext.GROUP
+            artifactId project.ext.ARTIFACT
+            version project.ext.VERSION
+
+            artifact sourcesJar
+            artifact javadocJar
+            if (isAndroidModule) {
+                artifact bundleRelease
+            } else if (isJavaModule) {
+                from components.java
+            }
+
+            pom {
+                if (isAndroidModule) {
+                    packaging 'aar'
+                } else if (isJavaModule) {
+                    packaging 'jar'
+                }
+                withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+                    configurations.compile.dependencies.each {
+                        if (it.group && it.name != 'unspecified' && it.version) {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                    configurations.implementation.dependencies.each {
+                        if (it.group && it.name != 'unspecified' && it.version) {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                    configurations.api.dependencies.each {
+                        if (it.group && it.name != 'unspecified' && it.version) {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+bintray {
+    user = properties.containsKey('BINTRAY_USER') ? properties.get('BINTRAY_USER') : ""
+    key = properties.containsKey('BINTRAY_API_KEY') ? properties.get('BINTRAY_API_KEY') : ""
+    publications = ['Bintray']
+    publish = project.ext.has('PUBLISH') ? project.ext.PUBLISH : true
+    override = project.ext.has('OVERRIDE') ? project.ext.OVERRIDE : false
+    dryRun = project.ext.has('DRYRUN') ? project.ext.DRYRUN : false
+    pkg {
+        repo = project.ext.has('BINTRAY_REPO') ? project.ext.BINTRAY_REPO : 'maven'
+        name = project.ext.has('BINTRAY_NAME') ? project.ext.BINTRAY_NAME : project.ext.ARTIFACT
+        licenses = project.ext.has('LICENSES') ? project.ext.LICENSES : ['Apache-2.0']
+        vcsUrl = project.ext.has('VCS_URL') ? project.ext.VCS_URL : ''
+        userOrg = project.ext.has('USER_ORG') ? project.ext.USER_ORG : properties.get('BINTRAY_USER')
+        publicDownloadNumbers = true
+    }
+}
