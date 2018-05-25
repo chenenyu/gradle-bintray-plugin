@@ -122,7 +122,14 @@ bintray {
         name = project.ext.has('BINTRAY_NAME') ? project.ext.BINTRAY_NAME : project.ext.ARTIFACT
         licenses = project.ext.has('LICENSES') ? project.ext.LICENSES : ['Apache-2.0']
         vcsUrl = project.ext.has('VCS_URL') ? project.ext.VCS_URL : ''
-        userOrg = project.ext.has('USER_ORG') ? project.ext.USER_ORG : properties.get('BINTRAY_USER')
+        if (project.ext.has('USER_ORG')) {
+            userOrg = project.ext.USER_ORG
+        }
         publicDownloadNumbers = true
+
+        version {
+            name = project.ext.VERSION
+            vcsTag = project.ext.VERSION
+        }
     }
 }
