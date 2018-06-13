@@ -109,7 +109,9 @@ publishing {
 }
 
 Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
+if (project.rootProject.file('local.properties').exists) {
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
 bintray {
     user = properties.containsKey('BINTRAY_USER') ? properties.get('BINTRAY_USER') : ""
     key = properties.containsKey('BINTRAY_API_KEY') ? properties.get('BINTRAY_API_KEY') : ""
