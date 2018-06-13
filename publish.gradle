@@ -109,7 +109,7 @@ publishing {
 }
 
 Properties properties = new Properties()
-if (project.rootProject.file('local.properties').exists) {
+if (project.rootProject.file('local.properties').exists()) {
     properties.load(project.rootProject.file('local.properties').newDataInputStream())
 }
 bintray {
