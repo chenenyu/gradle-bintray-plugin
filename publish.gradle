@@ -15,6 +15,7 @@ if (project.plugins.hasPlugin('com.android.library')) {
     throw new UnknownPluginException('Just support android/java projects now.')
 }
 
+// task to generate source.jar
 task sourcesJar(type: Jar) {
     group 'build'
     classifier = 'sources'
@@ -29,6 +30,7 @@ if (isAndroidModule) {
     }
 }
 
+// task to generate javadoc
 if (isAndroidModule) {
     task javadoc(type: Javadoc) {
         group 'documentation'
@@ -44,13 +46,42 @@ if (isAndroidModule) {
     }
 }
 
+// task to generate javadoc.jar
 task javadocJar(type: Jar, dependsOn: javadoc) {
     group 'build'
     from javadoc.getDestinationDir()
     classifier = 'javadoc'
 }
 
-def verifyDependency(Dependency it) {
+// handle aar artifact
+
+// The following types/formats are supported:
+//  - Instances of MavenArtifact.
+//  - Instances of AbstractArchiveTask, for example jar.
+//  - Instances of PublishArtifact
+//  - Maps containing a 'source' entry, for example [source: '/path/to/file', extension: 'zip'].
+//  - Anything that can be converted to a file, as per Project.file()
+def aarArtifact = null
+if (isAndroidModule) {
+    if (project.ext.has('AAR')) {
+        aarArtifact = project.ext.AAR
+    } else {
+        project.afterEvaluate {
+            def bundleAarTask = project.tasks.findByPath('bundleRelease')
+            if (!bundleAarTask) {
+                bundleAarTask = project.tasks.findByPath('bundleReleaseAar') // gradle plugin 3.2
+            }
+            if (bundleAarTask && (bundleAarTask instanceof AbstractArchiveTask)) {
+                aarArtifact = bundleAarTask
+            }
+            if (!aarArtifact) {
+                throw new MissingPropertyException("Extra properties['AAR'] are required.")
+            }
+        }
+    }
+}
+
+def synchronized verifyDependency(Dependency it) {
     return it.group != null && it.group != 'unspecified' && it.name != 'unspecified' &&
             it.version != null && it.version != 'unspecified'
 }
@@ -65,7 +96,7 @@ publishing {
             artifact sourcesJar
             artifact javadocJar
             if (isAndroidModule) {
-                artifact bundleRelease
+                artifact aarArtifact
             } else if (isJavaModule) {
                 from components.java
             }
