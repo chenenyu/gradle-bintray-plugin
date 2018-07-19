@@ -31,14 +31,7 @@ BINTRAY_API_KEY=your bintray api key
 ext {
     GROUP = 'com.example'  // required.
     ARTIFACT = 'library' // required.
-    VERSION = 1.2.3 // required.
-    BINTRAY_NAME = 'example-library' // optional. 
-    VCS_URL = 'https://github.com/user/repo.git' // optional. 
-    LICENSES = ['Apache-2.0'] // optional. 
-    USER_ORG = 'user or org' // optional. 
-    PUBLISH = true // optional. 
-    OVERRIDE = false // optional. 
-    DRYRUN = false // optional. 
+    VERSION = '1.2.3' // required.
     ...
 }
 ```
@@ -46,3 +39,21 @@ ext {
 4. apply script from remote.
 
 `apply from: 'https://raw.githubusercontent.com/chenenyu/gradle-bintray-plugin/master/publish.gradle'`
+
+## Support params
+
+| name         | type                                     | meaning                                  | required |
+| ------------ | ---------------------------------------- | ---------------------------------------- | -------- |
+| GROUP        | String                                   | group id                                 | yes      |
+| ARTIFACT     | String                                   | artifact id                              | yes      |
+| VERSION      | String                                   | version                                  | yes      |
+| AAR_ARTIFACT | The following types/formats are supported: <br>  - Instances of MavenArtifact. <br>  - Instances of AbstractArchiveTask, for example jar. <br>  - Instances of PublishArtifact <br>  - Maps containing a 'source' entry, for example [source: '/path/to/file', extension: 'zip']. <br>  - Anything that can be converted to a file, as per Project.file() <br>See `org.gradle.api.publish.maven.MavenPublication` | Specify the aar artifact.                |          |
+| BINTRAY_NAME | String                                   | The bintray repo name which you upload library to. default to **ARTIFACT**. |          |
+| BINTRAY_REPO | String                                   | Repo type. default to 'maven'.           |          |
+| VCS_URL      | String                                   | Such as 'https://github.com/user/repo.git'. default to ''. |          |
+| LICENSES     | String[]                                 | ['Apache-2.0']                           |          |
+| USER_ORG     | String                                   | Upload to user or org. default to  **BINTRAY_USER**. |          |
+| PUBLISH      | boolean                                  | Whether to publish or not after upload. default to trute. |          |
+| OVERRIDE     | boolean                                  | Override the remote library if current version exists. |          |
+| DRYRUN       | boolean                                  | Just dry run, not upload.                |          |
+
