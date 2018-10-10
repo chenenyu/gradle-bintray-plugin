@@ -86,52 +86,54 @@ def synchronized verifyDependency(Dependency it) {
             it.version != null && it.version != 'unspecified'
 }
 
-publishing {
-    publications {
-        Bintray(MavenPublication) {
-            groupId project.ext.GROUP
-            artifactId project.ext.ARTIFACT
-            version project.ext.VERSION
+project.afterEvaluate {
+    publishing {
+        publications {
+            Bintray(MavenPublication) {
+                groupId project.ext.GROUP
+                artifactId project.ext.ARTIFACT
+                version project.ext.VERSION
 
-            artifact sourcesJar
-            artifact javadocJar
-            if (isAndroidModule) {
-                artifact aarArtifact
-            } else if (isJavaModule) {
-                from components.java
-            }
-
-            pom {
+                artifact sourcesJar
+                artifact javadocJar
                 if (isAndroidModule) {
-                    packaging 'aar'
+                    artifact aarArtifact
                 } else if (isJavaModule) {
-                    packaging 'jar'
+                    from components.java
                 }
-                if (isAndroidModule) {
-                    withXml {
-                        def dependenciesNode = asNode().appendNode('dependencies')
-                        configurations.compile.dependencies.each {
-                            if (verifyDependency(it)) {
-                                def dependencyNode = dependenciesNode.appendNode('dependency')
-                                dependencyNode.appendNode('groupId', it.group)
-                                dependencyNode.appendNode('artifactId', it.name)
-                                dependencyNode.appendNode('version', it.version)
+
+                pom {
+                    if (isAndroidModule) {
+                        packaging 'aar'
+                    } else if (isJavaModule) {
+                        packaging 'jar'
+                    }
+                    if (isAndroidModule) {
+                        withXml {
+                            def dependenciesNode = asNode().appendNode('dependencies')
+                            configurations.compile.dependencies.each {
+                                if (verifyDependency(it)) {
+                                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                                    dependencyNode.appendNode('groupId', it.group)
+                                    dependencyNode.appendNode('artifactId', it.name)
+                                    dependencyNode.appendNode('version', it.version)
+                                }
                             }
-                        }
-                        configurations.implementation.dependencies.each {
-                            if (verifyDependency(it)) {
-                                def dependencyNode = dependenciesNode.appendNode('dependency')
-                                dependencyNode.appendNode('groupId', it.group)
-                                dependencyNode.appendNode('artifactId', it.name)
-                                dependencyNode.appendNode('version', it.version)
+                            configurations.implementation.dependencies.each {
+                                if (verifyDependency(it)) {
+                                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                                    dependencyNode.appendNode('groupId', it.group)
+                                    dependencyNode.appendNode('artifactId', it.name)
+                                    dependencyNode.appendNode('version', it.version)
+                                }
                             }
-                        }
-                        configurations.api.dependencies.each {
-                            if (verifyDependency(it)) {
-                                def dependencyNode = dependenciesNode.appendNode('dependency')
-                                dependencyNode.appendNode('groupId', it.group)
-                                dependencyNode.appendNode('artifactId', it.name)
-                                dependencyNode.appendNode('version', it.version)
+                            configurations.api.dependencies.each {
+                                if (verifyDependency(it)) {
+                                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                                    dependencyNode.appendNode('groupId', it.group)
+                                    dependencyNode.appendNode('artifactId', it.name)
+                                    dependencyNode.appendNode('version', it.version)
+                                }
                             }
                         }
                     }
@@ -139,32 +141,32 @@ publishing {
             }
         }
     }
-}
 
-Properties properties = new Properties()
-if (project.rootProject.file('local.properties').exists()) {
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-}
-bintray {
-    user = properties.containsKey('BINTRAY_USER') ? properties.get('BINTRAY_USER') : ""
-    key = properties.containsKey('BINTRAY_API_KEY') ? properties.get('BINTRAY_API_KEY') : ""
-    publications = ['Bintray']
-    publish = project.ext.has('PUBLISH') ? project.ext.PUBLISH : true
-    override = project.ext.has('OVERRIDE') ? project.ext.OVERRIDE : false
-    dryRun = project.ext.has('DRYRUN') ? project.ext.DRYRUN : false
-    pkg {
-        repo = project.ext.has('BINTRAY_REPO') ? project.ext.BINTRAY_REPO : 'maven'
-        name = project.ext.has('BINTRAY_NAME') ? project.ext.BINTRAY_NAME : project.ext.ARTIFACT
-        licenses = project.ext.has('LICENSES') ? project.ext.LICENSES : ['Apache-2.0']
-        vcsUrl = project.ext.has('VCS_URL') ? project.ext.VCS_URL : ''
-        if (project.ext.has('USER_ORG')) {
-            userOrg = project.ext.USER_ORG
-        }
-        publicDownloadNumbers = true
+    Properties properties = new Properties()
+    if (project.rootProject.file('local.properties').exists()) {
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    }
+    bintray {
+        user = properties.containsKey('BINTRAY_USER') ? properties.get('BINTRAY_USER') : ""
+        key = properties.containsKey('BINTRAY_API_KEY') ? properties.get('BINTRAY_API_KEY') : ""
+        publications = ['Bintray']
+        publish = project.ext.has('PUBLISH') ? project.ext.PUBLISH : true
+        override = project.ext.has('OVERRIDE') ? project.ext.OVERRIDE : false
+        dryRun = project.ext.has('DRYRUN') ? project.ext.DRYRUN : false
+        pkg {
+            repo = project.ext.has('BINTRAY_REPO') ? project.ext.BINTRAY_REPO : 'maven'
+            name = project.ext.has('BINTRAY_NAME') ? project.ext.BINTRAY_NAME : project.ext.ARTIFACT
+            licenses = project.ext.has('LICENSES') ? project.ext.LICENSES : ['Apache-2.0']
+            vcsUrl = project.ext.has('VCS_URL') ? project.ext.VCS_URL : ''
+            if (project.ext.has('USER_ORG')) {
+                userOrg = project.ext.USER_ORG
+            }
+            publicDownloadNumbers = true
 
-        version {
-            name = project.ext.VERSION
-            vcsTag = project.ext.VERSION
+            version {
+                name = project.ext.VERSION
+                vcsTag = project.ext.VERSION
+            }
         }
     }
 }
